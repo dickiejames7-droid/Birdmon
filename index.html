@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Birdmon">
+<link rel="manifest" href="manifest.json">
+<title>British Birdmon</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --gold: #f0c000;
+    --gold-dark: #c89800;
+    --red: #e03010;
+    --bg: #0d1b2a;
+    --surface: #1a2d42;
+    --surface2: #243d57;
+    --text: #f0f4f8;
+    --text2: #9bb8d4;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    overscroll-behavior: none;
+  }
+
+  /* ── TOP NAV ─────────────────────── */
+  .nav {
+    background: var(--surface);
+    border-bottom: 2px solid var(--gold-dark);
+    padding: 12px 16px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-logo {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--gold);
+    text-shadow: 0 2px 8px rgba(240,192,0,0.3);
+    letter-spacing: 0.02em;
+  }
+
+  .nav-logo span { color: #fff; }
+
+  .progress-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .progress-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  .pokeball-nav {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2.5px solid var(--gold);
+    background: linear-gradient(to bottom, #fff 50%, var(--red) 50%);
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pokeball-nav::after {
+    content: '';
+    position: absolute;
+    inset: 50% 20% auto;
+    height: 2.5px;
+    background: var(--gold);
+  }
+
+  /* ── TABS ────────────────────────── */
+  .tabs {
+    display: flex;
+    background: var(--surface);
+    border-bottom: 2px solid #ffffff18;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex: 0 0 auto;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+    font-family: 'Nunito', sans-serif;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* ── PROGRESS BAR ────────────────── */
+  .progress-bar-wrap {
+    padding: 10px 16px 0;
+    background: var(--bg);
+  }
+
+  .progress-bar-track {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 4px;
+    font-weight: 600;
+  }
+
+  /* ── GRID ────────────────────────── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 12px;
+  }
+
+  /* ── CARD ────────────────────────── */
+  .bird-card {
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.15s;
+    position: relative;
+    border: 3px solid var(--gold-dark);
+    outline: 1.5px solid rgba(240,192,0,0.3);
+  }
+
+  .bird-card:active { transform: scale(0.97); }
+
+  .bird-card.captured {
+    border-color: #22cc44;
+    outline-color: rgba(34,204,68,0.3);
+  }
+
+  .card-header {
+    padding: 6px 8px 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgba(0,0,0,0.2);
+  }
+
+  .card-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 14px;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    line-height: 1;
+  }
+
+  .card-hp {
+    font-size: 10px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.85);
+    line-height: 1;
+  }
+
+  .card-hp span { font-size: 14px; }
+
+  .card-art {
+    width: 100%;
+    display: block;
+    background: #c8e8a8;
+  }
+
+  .card-footer {
+    padding: 5px 8px 7px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-type-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.25);
+    color: rgba(255,255,255,0.9);
+  }
+
+  .rarity-mini {
+    display: flex;
+    gap: 3px;
+  }
+
+  .rarity-mini .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+
+  .rarity-mini .dot.on { background: var(--gold); border-color: var(--gold-dark); }
+
+  .captured-stamp {
+    position: absolute;
+    top: 8px; right: 6px;
+    background: #22cc44;
+    color: white;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 5px;
+    border-radius: 8px;
+    letter-spacing: 0.05em;
+    transform: rotate(8deg);
+    text-transform: uppercase;
+    border: 1.5px solid #44ee66;
+  }
+
+  /* ── MODAL ───────────────────────── */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 400px;
+    max-height: 92vh;
+    overflow-y: auto;
+    background: var(--bg);
+    border-radius: 24px 24px 0 0;
+    border: 2px solid var(--gold-dark);
+    border-bottom: none;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    padding-bottom: 32px;
+  }
+
+  .modal-backdrop.open .modal {
+    transform: translateY(0);
+  }
+
+  .modal-drag {
+    width: 40px;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+
+  /* Full detail card inside modal */
+  .detail-card {
+    margin: 12px 16px 0;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 3px solid var(--gold-dark);
+    outline: 2px solid rgba(240,192,0,0.3);
+  }
+
+  .detail-header {
+    padding: 10px 14px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid rgba(0,0,0,0.2);
+  }
+
+  .detail-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  .detail-hp {
+    font-size: 12px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .detail-hp span { font-size: 18px; }
+
+  .detail-subheader {
+    padding: 4px 14px 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .detail-type-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 20px;
+    background: rgba(0,0,0,0.3);
+    color: rgba(255,255,255,0.9);
+  }
+
+  .detail-latin {
+    font-size: 11px;
+    font-style: italic;
+    color: rgba(0,0,0,0.5);
+  }
+
+  .detail-art {
+    width: 100%;
+    display: block;
+  }
+
+  .detail-rarity {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    padding: 8px 0 4px;
+    background: inherit;
+  }
+
+  .detail-rarity .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.12);
+    border: 1.5px solid rgba(0,0,0,0.2);
+  }
+
+  .detail-rarity .dot.on { background: var(--red); border-color: #cc2200; }
+
+  .detail-divider {
+    height: 1px;
+    margin: 0 14px;
+    background: rgba(0,0,0,0.15);
+  }
+
+  .detail-stats {
+    padding: 10px 14px 6px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 4px 0;
+    border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    color: #1a1a1a;
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+  .stat-label { font-weight: 700; color: #7a4a00; }
+
+  .detail-fact {
+    margin: 8px 14px;
+    background: rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.6;
+    border-left: 3px solid var(--gold-dark);
+    color: #1a1a1a;
+  }
+
+  /* Capture button */
+  .capture-wrap {
+    padding: 0 14px 6px;
+  }
+
+  .capture-btn {
+    width: 100%;
+    padding: 13px 0;
+    border-radius: 30px;
+    border: 3px solid #ffee00;
+    background: var(--red);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 900;
+    font-family: 'Fredoka One', cursive;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.12s, background 0.15s;
+    outline: 2px solid #ff6030;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+
+  .capture-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 44%;
+    background: rgba(255,255,255,0.15);
+    border-radius: 30px 30px 50% 50%;
+    pointer-events: none;
+  }
+
+  .capture-btn:hover { transform: scale(1.02); }
+  .capture-btn:active { transform: scale(0.97); }
+
+  .capture-btn.captured {
+    background: #1a8a30;
+    border-color: #44ee66;
+    outline-color: #22cc44;
+  }
+
+  .capture-btn.captured::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 44%;
+    background: rgba(255,255,255,0.12);
+    border-radius: 30px 30px 50% 50%;
+    pointer-events: none;
+  }
+
+  .close-btn {
+    display: block;
+    width: calc(100% - 28px);
+    margin: 4px 14px 0;
+    padding: 10px;
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.15s;
+  }
+
+  .close-btn:hover { background: var(--surface); }
+
+  /* ── COLLECTION VIEW ─────────────── */
+  .collection-view {
+    display: none;
+    padding: 16px;
+  }
+
+  .collection-view.active { display: block; }
+
+  .collection-header {
+    text-align: center;
+    padding: 8px 0 16px;
+  }
+
+  .collection-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .collection-sub {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .dex-number {
+    font-family: 'Fredoka One', cursive;
+    font-size: 36px;
+    color: #fff;
+    display: block;
+    line-height: 1;
+  }
+
+  .type-section { margin-bottom: 20px; }
+
+  .type-heading {
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .collected-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .collected-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px 5px 6px;
+    background: var(--surface);
+    border-radius: 20px;
+    border: 1.5px solid var(--surface2);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .collected-chip:hover { border-color: var(--gold-dark); }
+
+  .collected-chip.got {
+    border-color: #22cc44;
+    background: rgba(34,204,68,0.12);
+  }
+
+  .chip-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1.5px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+  }
+
+  .chip-dot.got { background: #22cc44; border-color: #44ee66; }
+
+  .chip-num {
+    font-size: 10px;
+    color: var(--text2);
+    font-weight: 600;
+  }
+
+  /* ── FLASH ANIMATION ─────────────── */
+  @keyframes flash-capture {
+    0%, 100% { opacity: 1; }
+    25% { opacity: 0.2; }
+    50% { opacity: 1; }
+    75% { opacity: 0.5; }
+  }
+
+  .flash-anim { animation: flash-capture 0.5s ease; }
+
+  /* ── EMPTY STATE ─────────────────── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text2);
+  }
+
+  .empty-state .big { font-size: 48px; display: block; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; line-height: 1.6; }
+
+  /* ── SCROLL RESTORATION ──────────── */
+  .main-view { display: none; }
+  .main-view.active { display: block; }
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">British <span>Birdmon</span></div>
+  <div class="progress-wrap">
+    <span class="progress-text" id="navProgress">0 / 39</span>
+    <div class="pokeball-nav"></div>
+  </div>
+</nav>
+
+<div class="tabs" role="tablist">
+  <button class="tab active" onclick="switchTab('all', this)">All Birds</button>
+  <button class="tab" onclick="switchTab('Garden', this)">🏡 Garden</button>
+  <button class="tab" onclick="switchTab('Woodland', this)">🌳 Woodland</button>
+  <button class="tab" onclick="switchTab('Farmland', this)">🌾 Farmland</button>
+  <button class="tab" onclick="switchTab('Wetland', this)">💧 Wetland</button>
+  <button class="tab" onclick="switchTab('Coastal', this)">🌊 Coastal</button>
+  <button class="tab" onclick="switchTab('Moorland', this)">🌿 Moorland</button>
+  <button class="tab" onclick="switchTab('collection', this)">⭐ My Dex</button>
+</div>
+
+<div class="progress-bar-wrap" id="progressBarWrap">
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+  </div>
+  <div class="progress-label" id="progressLabel">0 of 39 birds captured — keep exploring!</div>
+</div>
+
+<!-- MAIN GRID VIEW -->
+<div class="main-view active" id="mainView">
+  <div class="grid" id="birdGrid"></div>
+</div>
+
+<!-- COLLECTION VIEW -->
+<div class="collection-view" id="collectionView">
+  <div class="collection-header">
+    <div class="collection-title">My Birdmon</div>
+    <span class="dex-number" id="dexNumber">0</span>
+    <div class="collection-sub" id="dexSub">birds captured out of 39</div>
+  </div>
+  <div id="collectionList"></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-drag"></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script src="birds.js"></script>
+<script src="illustrations.js"></script>
+<script>
+  let captured = new Set(JSON.parse(localStorage.getItem('birdmon_captured') || '[]'));
+  let currentFilter = 'all';
+
+  function save() {
+    localStorage.setItem('birdmon_captured', JSON.stringify([...captured]));
+    updateProgress();
+  }
+
+  function updateProgress() {
+    const n = captured.size;
+    const pct = Math.round((n / BIRDS.length) * 100);
+    document.getElementById('navProgress').textContent = n + ' / 39';
+    document.getElementById('progressBar').style.width = pct + '%';
+    const msgs = [
+      'Keep exploring!',
+      'Great start!',
+      'Nice work, spotter!',
+      'Halfway there!',
+      'Almost got them all!',
+      'Complete! You\'re a true birdwatcher!'
+    ];
+    const idx = Math.min(Math.floor(pct / 20), 5);
+    document.getElementById('progressLabel').textContent = n + ' of 39 birds captured — ' + msgs[idx];
+  }
+
+  function getHeaderBg(type) {
+    const t = TYPE_THEMES[type];
+    return t ? t.header : '#1a1a2e';
+  }
+
+  function getArtBg(type) {
+    const t = TYPE_THEMES[type];
+    return t ? t.artBg : '#c8e8a8';
+  }
+
+  function renderGrid(filter) {
+    const grid = document.getElementById('birdGrid');
+    const birds = filter === 'all' ? BIRDS : BIRDS.filter(b => b.type === filter);
+    grid.innerHTML = '';
+    birds.forEach(bird => {
+      const isCaptured = captured.has(bird.id);
+      const theme = TYPE_THEMES[bird.type];
+      const card = document.createElement('div');
+      card.className = 'bird-card' + (isCaptured ? ' captured' : '');
+      card.style.background = theme.bg;
+      card.dataset.id = bird.id;
+      const dots = [1,2,3,4,5].map(i =>
+        `<div class="dot${i <= bird.rarity ? ' on' : ''}"></div>`
+      ).join('');
+      card.innerHTML = `
+        <div class="card-header" style="background:${theme.header}">
+          <div class="card-name">${bird.name}</div>
+          <div class="card-hp"><span>${bird.hp}</span> HP</div>
+        </div>
+        <div class="card-art" style="background:${theme.artBg}">
+          ${getBirdSVG(bird.id, theme.artBg)}
+        </div>
+        <div class="card-footer" style="background:${theme.header}">
+          <span class="card-type-badge">${bird.typeEmoji} ${bird.type}</span>
+          <div class="rarity-mini">${dots}</div>
+        </div>
+        ${isCaptured ? '<div class="captured-stamp">Captured!</div>' : ''}
+      `;
+      card.addEventListener('click', () => openModal(bird.id));
+      grid.appendChild(card);
+    });
+  }
+
+  function openModal(birdId) {
+    const bird = BIRDS.find(b => b.id === birdId);
+    const theme = TYPE_THEMES[bird.type];
+    const isCaptured = captured.has(bird.id);
+    const dots = [1,2,3,4,5].map(i =>
+      `<div class="dot${i <= bird.rarity ? ' on' : ''}"></div>`
+    ).join('');
+    const numStr = 'No.' + String(bird.id).padStart(3,'0') + ' / 039';
+    document.getElementById('modalContent').innerHTML = `
+      <div class="detail-card" style="background:${theme.bg}" id="detailCard">
+        <div class="detail-header" style="background:${theme.header}">
+          <div class="detail-name">${bird.name}</div>
+          <div class="detail-hp"><span>${bird.hp}</span> HP</div>
+        </div>
+        <div class="detail-subheader" style="background:${theme.header}">
+          <span class="detail-type-badge">${bird.typeEmoji} ${bird.type}</span>
+          <span class="detail-latin">${bird.latin}</span>
+        </div>
+        <div class="detail-art" style="background:${theme.artBg}">
+          ${getBirdSVG(bird.id, theme.artBg)}
+        </div>
+        <div class="detail-rarity" style="background:${theme.bg}">${dots}</div>
+        <div class="detail-divider"></div>
+        <div class="detail-stats" style="background:${theme.bg}">
+          <div class="stat-row"><span class="stat-label">Size</span><span>${bird.size}</span></div>
+          <div class="stat-row"><span class="stat-label">Diet</span><span>${bird.diet}</span></div>
+          <div class="stat-row"><span class="stat-label">Season</span><span>${bird.season}</span></div>
+          <div class="stat-row"><span class="stat-label">Rarity</span><span>${'★'.repeat(bird.rarity) + '☆'.repeat(5-bird.rarity)}</span></div>
+          <div class="stat-row"><span class="stat-label">Number</span><span>${numStr}</span></div>
+        </div>
+        <div class="detail-fact" style="background:${theme.bg}">🎯 ${bird.fact}</div>
+        <div class="capture-wrap" style="background:${theme.bg}; padding: 0 14px 6px;">
+          <button class="capture-btn${isCaptured ? ' captured' : ''}" id="modalCapBtn" onclick="toggleCapture(${bird.id})">
+            ${isCaptured ? '✓ Captured!' : '⚡ Capture!'}
+          </button>
+        </div>
+        <div style="background:${theme.bg}; padding: 0 14px 14px; text-align:center;">
+          <button class="close-btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('modalBackdrop').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(e) {
+    if (e && e.target !== document.getElementById('modalBackdrop')) return;
+    document.getElementById('modalBackdrop').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function toggleCapture(birdId) {
+    if (captured.has(birdId)) {
+      captured.delete(birdId);
+    } else {
+      captured.add(birdId);
+      const card = document.getElementById('detailCard');
+      if (card) {
+        card.classList.add('flash-anim');
+        setTimeout(() => card.classList.remove('flash-anim'), 600);
+      }
+    }
+    save();
+    const btn = document.getElementById('modalCapBtn');
+    if (btn) {
+      const isCap = captured.has(birdId);
+      btn.className = 'capture-btn' + (isCap ? ' captured' : '');
+      btn.textContent = isCap ? '✓ Captured!' : '⚡ Capture!';
+    }
+    renderGrid(currentFilter);
+    renderCollection();
+  }
+
+  function switchTab(filter, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = filter;
+
+    const mainView = document.getElementById('mainView');
+    const collView = document.getElementById('collectionView');
+    const pbarWrap = document.getElementById('progressBarWrap');
+
+    if (filter === 'collection') {
+      mainView.classList.remove('active');
+      collView.classList.add('active');
+      pbarWrap.style.display = 'none';
+      renderCollection();
+    } else {
+      mainView.classList.add('active');
+      collView.classList.remove('active');
+      pbarWrap.style.display = 'block';
+      renderGrid(filter);
+    }
+  }
+
+  function renderCollection() {
+    const n = captured.size;
+    document.getElementById('dexNumber').textContent = n;
+    document.getElementById('dexSub').textContent = 'birds captured out of 39';
+
+    const types = ['Garden','Woodland','Farmland','Wetland','Coastal','Moorland'];
+    const container = document.getElementById('collectionList');
+
+    if (n === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <span class="big">🔭</span>
+          <p>You haven't captured any birds yet!<br>Head outside and start spotting.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = types.map(type => {
+      const birds = BIRDS.filter(b => b.type === type);
+      const theme = TYPE_THEMES[type];
+      const chips = birds.map(bird => {
+        const got = captured.has(bird.id);
+        return `<div class="collected-chip${got ? ' got' : ''}" onclick="openModal(${bird.id})">
+          <div class="chip-dot${got ? ' got' : ''}"></div>
+          <span>${bird.name}</span>
+          <span class="chip-num">#${String(bird.id).padStart(3,'0')}</span>
+        </div>`;
+      }).join('');
+      const countGot = birds.filter(b => captured.has(b.id)).length;
+      return `
+        <div class="type-section">
+          <div class="type-heading" style="background:${theme.header}; color:${theme.artBg}">
+            ${birds[0].typeEmoji} ${type} — ${countGot}/${birds.length}
+          </div>
+          <div class="collected-list">${chips}</div>
+        </div>`;
+    }).join('');
+  }
+
+  // Init
+  renderGrid('all');
+  updateProgress();
+</script>
+</body>
+</html>
